@@ -5,23 +5,27 @@ import topology.metric_space.cau_seq_filter
 import topology.algebra.polynomial
 
 section nonarchimedean
-  /-- A nonarchimedean type is a type with an addition operation and a norm satisfying `∥x + y∥ ≤ max ∥x∥ ∥y∥`. -/
-  class nonarchimedean (𝕜) [has_add 𝕜] [has_norm 𝕜] :=
+  variables (𝕜 : Type) [normed_group 𝕜]
+
+  /-- A nonarchimedean type is a type with a normed group structure satisfying `∥x + y∥ ≤ max ∥x∥ ∥y∥`. -/
+  class nonarchimedean :=
   (nonarch : ∀ x y : 𝕜, ∥x + y∥ ≤ max (∥x∥) (∥y∥))
 
+  variables {𝕜} [nonarchimedean 𝕜]
+
   /-- The nonarchimedean inequality with addition replaced with subtraction. -/
-  theorem nonarchimedean.nonarch_sub {𝕜} [normed_group 𝕜] [nonarchimedean 𝕜] (x y : 𝕜) : ∥x - y∥ ≤ max (∥x∥) (∥y∥) :=
+  theorem nonarchimedean.nonarch_sub (x y : 𝕜) : ∥x - y∥ ≤ max (∥x∥) (∥y∥) :=
     (sub_eq_add_neg x y).symm ▸ norm_neg y ▸ nonarchimedean.nonarch x (-y)
 
   /-- The nonarchimedean inequality is equal if the elements being added have different norms. -/
-  theorem nonarchimedean.eq_max_of_ne_norm {𝕜} [normed_group 𝕜] [nonarchimedean 𝕜] {x y : 𝕜} (h : ∥x∥ ≠ ∥y∥) :
+  theorem nonarchimedean.eq_max_of_ne_norm {x y : 𝕜} (h : ∥x∥ ≠ ∥y∥) :
     ∥x + y∥ = max (∥x∥) (∥y∥) :=
   begin
     have : ∀ {x y : 𝕜}, ∥x∥ > ∥y∥ → ∥x + y∥ = max (∥x∥) (∥y∥),
     { intros x y h,
       rw [max_eq_left_of_lt h],
       have := nonarchimedean.nonarch_sub (x + y) y,
-      rw [←(eq_sub_of_add_eq rfl : x = (x + y) - y)] at this,
+      rw [←(eq_sub_of_add_eq rfl : x = x + y - y)] at this,
       apply le_antisymm (max_eq_left_of_lt h ▸ nonarchimedean.nonarch x y : ∥x + y∥ ≤ ∥x∥),
       cases le_max_iff.mp this with h' h',
       { exact h' },
@@ -32,7 +36,7 @@ section nonarchimedean
   end
 
   /-- If the nonarchimedean inequality is not equal, the elements being added have the same norm. -/
-  theorem nonarchimedean.eq_norm_of_ne_max {𝕜} [normed_group 𝕜] [nonarchimedean 𝕜] {x y : 𝕜} (h : ∥x + y∥ ≠ max (∥x∥) (∥y∥)) :
+  theorem nonarchimedean.eq_norm_of_ne_max {x y : 𝕜} (h : ∥x + y∥ ≠ max (∥x∥) (∥y∥)) :
     ∥x∥ = ∥y∥ := of_not_not (mt nonarchimedean.eq_max_of_ne_norm h)
 
   /-- A `ℕ`-indexed sequence in a nonarchimedian normed ring is Cauchy iff the difference
@@ -69,6 +73,7 @@ section
     zero_mem' := norm_zero.le.trans zero_le_one,
     neg_mem'  := λ x hx, ((norm_neg x).symm ▸ hx : ∥-x∥ ≤ 1)
   }
+
   namespace disc
     /-- `disc 𝕜` inherits the norm of `𝕜`. -/
     instance disc_normed_ring : normed_ring (disc 𝕜) := {
@@ -105,7 +110,7 @@ section
       variables {x y : disc 𝕜} (h : ∥x∥ ≤ ∥y∥)
       include h
 
-      /-- `disc 𝕜` inherits division from `𝕜`, so long as the denominator has at least the numerator's norm.  -/
+      /-- `disc 𝕜` inherits division from `𝕜`, so long as the denominator has at least the numerator's norm. -/
       def divide : disc 𝕜 := ⟨x.1 / y.1,
       begin
         change ∥_∥ ≤ 1,
@@ -138,8 +143,7 @@ section
 
     /-- `disc 𝕜` inherits the completeness of `𝕜`, i.e. if all Cauchy sequences in `𝕜` are convergent,
       then so are all Cauchy sequences in `disc 𝕜`. -/
-    instance disc_is_complete [cau_seq.is_complete 𝕜 norm] : cau_seq.is_complete (disc 𝕜) norm := {
-      is_complete := λ s,
+    instance disc_is_complete [cau_seq.is_complete 𝕜 norm] : cau_seq.is_complete (disc 𝕜) norm := ⟨λ s,
       begin
         let s' : cau_seq 𝕜 norm := ⟨λ n, (s n).1, s.2⟩,
         use s'.lim,
@@ -152,8 +156,7 @@ section
           { rw [←norm_neg, neg_sub, cau_seq.const_apply] },
           rw [this], exact le_of_lt (hn n (le_refl n)) },
         { exact s'.equiv_lim }
-      end
-    }
+      end⟩
   end disc
 end
 
