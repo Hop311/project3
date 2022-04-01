@@ -147,14 +147,12 @@ section
       begin
         let s' : cau_seq 𝕜 norm := ⟨λ n, (s n).1, s.2⟩,
         use s'.lim,
-        { change ∥_∥ ≤ 1,
-          cases s'.equiv_lim 1 zero_lt_one with n hn,
+        { cases s'.equiv_lim 1 zero_lt_one with n hn,
           rw [←sub_add_cancel s'.lim (s' n)],
           apply le_trans (nonarchimedean.nonarch (s'.lim - s' n) (s' n)),
-          refine max_le _ (s n).2,
-          have : ∥s'.lim - s' n∥ = ∥s' n - cau_seq.const norm s'.lim n∥,
+          have : ∥s' n - cau_seq.const norm s'.lim n∥ = ∥s'.lim - s' n∥,
           { rw [←norm_neg, neg_sub, cau_seq.const_apply] },
-          rw [this], exact le_of_lt (hn n (le_refl n)) },
+          exact max_le (this ▸ le_of_lt (hn n (le_refl n))) (s n).2 },
         { exact s'.equiv_lim }
       end⟩
   end disc
@@ -218,12 +216,12 @@ section taylor
 end taylor
 
 section
-  variables {𝕜 : Type} [normed_ring 𝕜] [is_absolute_value (norm : 𝕜 → ℝ)] [cau_seq.is_complete 𝕜 norm]
+  variables {R : Type} [normed_ring R] [is_absolute_value (norm : R → ℝ)]
 
   /-- A filter-wise Cauchy sequence is an absolute-value-wise Cauchy sequence.
     (This already exists in `topology.metric_space.cau_seq_filter`, but only for normed fields,
     here it is restated for normed rings whose norm is an absolute value). -/
-  theorem cauchy_seq.is_cau_seq' {f : ℕ → 𝕜} (hf : cauchy_seq f) :
+  theorem cauchy_seq.is_cau_seq' {f : ℕ → R} (hf : cauchy_seq f) :
     is_cau_seq norm f :=
   begin
     cases cauchy_iff.1 hf with hf1 hf2,
@@ -237,21 +235,23 @@ section
     apply set.mk_mem_prod; solve_by_elim [le_refl]
   end
 
+  variable [cau_seq.is_complete R norm]
+
   /-- A Cauchy sequence formed by composing a Cauchy sequence with a polynomial. -/
-  noncomputable def polynomial_comp (f : polynomial 𝕜) (s : cau_seq 𝕜 norm) : cau_seq 𝕜 norm :=
+  noncomputable def polynomial_comp (f : polynomial R) (s : cau_seq R norm) : cau_seq R norm :=
     ⟨λ n, f.eval (s n), ((f.continuous.tendsto s.lim).comp s.tendsto_limit).cauchy_seq.is_cau_seq'⟩
 
   /-- The composition of a polynomial with a Cauchy sequence's limit equals the limit of the
     composition of the polynomial with the Cauchy sequence. -/
-  theorem polynomial_comp_lim (f : polynomial 𝕜) (s : cau_seq 𝕜 norm) : f.eval s.lim = (polynomial_comp f s).lim :=
+  theorem polynomial_comp_lim (f : polynomial R) (s : cau_seq R norm) : f.eval s.lim = (polynomial_comp f s).lim :=
     tendsto_nhds_unique ((f.continuous.tendsto s.lim).comp s.tendsto_limit) (polynomial_comp f s).tendsto_limit
 
   /-- A Cauchy sequence formed by composing a Cauchy sequence with the norm. -/
-  noncomputable def norm_comp (s : cau_seq 𝕜 norm) : cau_seq ℝ norm :=
+  noncomputable def norm_comp (s : cau_seq R norm) : cau_seq ℝ norm :=
     ⟨λ n, ∥s n∥, ((continuous_norm.tendsto s.lim).comp s.tendsto_limit).cauchy_seq.is_cau_seq'⟩
 
   /-- The composition of the norm with a Cauchy sequence's limit equals the limit of the
     composition of the norm with the Cauchy sequence. -/
-  theorem norm_comp_lim (s : cau_seq 𝕜 norm) : ∥s.lim∥ = (norm_comp s).lim :=
+  theorem norm_comp_lim (s : cau_seq R norm) : ∥s.lim∥ = (norm_comp s).lim :=
     tendsto_nhds_unique ((continuous_norm.tendsto s.lim).comp s.tendsto_limit) (norm_comp s).tendsto_limit
 end
