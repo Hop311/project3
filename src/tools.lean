@@ -7,7 +7,7 @@ import topology.algebra.polynomial
 section nonarchimedean
   variables (𝕜 : Type) [normed_group 𝕜]
 
-  /-- A nonarchimedean type is a type with a normed group structure satisfying `∥x + y∥ ≤ max ∥x∥ ∥y∥`. -/
+  /-- A type with a normed group structure is nonarchimedean if it satisfies `∥x + y∥ ≤ max ∥x∥ ∥y∥`. -/
   class nonarchimedean :=
   (nonarch : ∀ x y : 𝕜, ∥x + y∥ ≤ max (∥x∥) (∥y∥))
 
@@ -39,7 +39,7 @@ section nonarchimedean
   theorem nonarchimedean.eq_norm_of_ne_max {x y : 𝕜} (h : ∥x + y∥ ≠ max (∥x∥) (∥y∥)) :
     ∥x∥ = ∥y∥ := of_not_not (mt nonarchimedean.eq_max_of_ne_norm h)
 
-  /-- A `ℕ`-indexed sequence in a nonarchimedian normed ring is Cauchy iff the difference
+  /-- A `ℕ`-indexed sequence in a nonarchimedean normed ring is Cauchy iff the difference
     of its consecutive terms tends to `0`. -/
   theorem nonarchimedean.cau {𝕜} [normed_ring 𝕜] [nonarchimedean 𝕜] {s : ℕ → 𝕜} :
     is_cau_seq norm s ↔ ∀ ε > 0, ∃ i, ∀ j ≥ i, ∥s (j + 1) - s j∥ < ε :=
@@ -63,7 +63,7 @@ end nonarchimedean
 section
   variables (𝕜 : Type) [normed_field 𝕜] [nonarchimedean 𝕜]
 
-  /-- The closed unit ball in the nonarchimedian normed field `𝕜`. -/
+  /-- The closed unit ball in the nonarchimedean normed field `𝕜`. -/
   def disc : subring 𝕜 := {
     carrier   := {x | ∥x∥ ≤ 1},
     mul_mem'  := λ x y hx hy, (norm_mul_le x y).trans (one_mul (1 : ℝ) ▸
